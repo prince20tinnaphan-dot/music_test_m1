@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบทดสอบดนตรีสากล ม.1</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,"Noto Sans Thai",sans-serif;
+  background:linear-gradient(135deg,#dff3ff,#f8e8ff);
+  color:#222;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:18px;
+}
+
+header{
+  background:linear-gradient(135deg,#5146e5,#8e44ad);
+  color:white;
+  padding:25px 18px;
+  border-radius:22px;
+  text-align:center;
+  box-shadow:0 8px 25px #0002;
+  margin-bottom:20px;
+}
+
+header h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+header p{
+  margin:0;
+  font-size:15px;
+}
+
+.card{
+  background:white;
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 5px 18px #0002;
+}
+
+.question{
+  font-size:19px;
+  font-weight:bold;
+  line-height:1.6;
+  margin-bottom:15px;
+}
+
+.options{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:2px solid #ddd;
+  border-radius:12px;
+  padding:12px;
+  cursor:pointer;
+  transition:.2s;
+  background:#fff;
+}
+
+.option:hover{
+  background:#f4f2ff;
+  border-color:#7167e8;
+}
+
+.option input{
+  width:19px;
+  height:19px;
+  flex:none;
+}
+
+.label{
+  font-weight:bold;
+  width:25px;
+  flex:none;
+}
+
+.staff{
+  width:100%;
+  max-width:500px;
+  margin:15px auto;
+  display:block;
+  background:#fafafa;
+  border-radius:12px;
+  border:1px solid #ddd;
+}
+
+button{
+  border:none;
+  border-radius:14px;
+  padding:15px 25px;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#submitBtn{
+  width:100%;
+  background:#5146e5;
+  color:white;
+  margin:10px 0 20px;
+}
+
+#submitBtn:hover{
+  background:#4035c5;
+}
+
+#restartBtn{
+  background:#18a66b;
+  color:white;
+  width:100%;
+}
+
+.result{
+  display:none;
+  background:white;
+  border-radius:20px;
+  padding:25px;
+  margin-bottom:20px;
+  text-align:center;
+  box-shadow:0 5px 20px #0002;
+}
+
+.score{
+  font-size:38px;
+  font-weight:bold;
+  color:#5146e5;
+}
+
+.explanation{
+  margin-top:10px;
+  padding:14px;
+  border-radius:12px;
+  text-align:left;
+  line-height:1.6;
+}
+
+.correct{
+  background:#e8f8ee;
+  border-left:5px solid #20a463;
+}
+
+.wrong{
+  background:#ffeded;
+  border-left:5px solid #e34b4b;
+}
+
+@media(max-width:600px){
+  header h1{
+    font-size:23px;
+  }
+
+  .question{
+    font-size:17px;
+  }
+
+  .card{
+    padding:15px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <h1>🎵 แบบทดสอบดนตรีสากล ม.1</h1>
+  <p>50 ข้อ • ตัวเลือกสุ่มทุกครั้ง • พร้อมเฉลยและคำอธิบาย</p>
+</header>
+
+<div id="quiz"></div>
+
+<button id="submitBtn" onclick="submitQuiz()">📤 ส่งคำตอบ</button>
+
+<div id="result" class="result">
+  <h2>🎉 ผลการทดสอบ</h2>
+  <div class="score" id="score"></div>
+  <p id="scoreText"></p>
+  <button id="restartBtn" onclick="restartQuiz()">🔄 ทำใหม่</button>
+</div>
+
+</div>
+
+<script>
+
+/* =========================
+   สร้างรูปบรรทัด 5 เส้น
+========================= */
+
+function staffSVG(clef, notePosition=null){
+
+  let clefSymbol = clef === "treble" ? "𝄞" : "𝄢";
+
+  let noteY = {
+    "line1":145,
+    "space1":132,
+    "line2":119,
+    "space2":106,
+    "line3":93,
+    "space3":80,
+    "line4":67,
+    "space4":54,
+    "line5":41
+  };
+
+  let note = "";
+
+  if(notePosition){
+    let y = noteY[notePosition] || 93;
+
+    note = `
+      <ellipse cx="270" cy="${y}" rx="10" ry="7"
+               fill="black"
+               transform="rotate(-15 270 ${y})"/>
+      <line x1="278" y1="${y}" x2="278" y2="${y-38}"
+            stroke="black" stroke-width="3"/>
+    `;
+  }
+
+  return `
+  <svg class="staff" viewBox="0 0 520 180">
+
+    <rect x="0" y="0" width="520" height="180"
+          rx="12" fill="#fff"/>
+
+    <text x="20" y="115"
+          font-size="82"
+          font-family="serif">${clefSymbol}</text>
+
+    <line x1="85" y1="41" x2="490" y2="41"
+          stroke="black" stroke-width="2"/>
+    <line x1="85" y1="67" x2="490" y2="67"
+          stroke="black" stroke-width="2"/>
+    <line x1="85" y1="93" x2="490" y2="93"
+          stroke="black" stroke-width="2"/>
+    <line x1="85" y1="119" x2="490" y2="119"
+          stroke="black" stroke-width="2"/>
+    <line x1="85" y1="145" x2="490" y2="145"
+          stroke="black" stroke-width="2"/>
+
+    ${note}
+
+  </svg>
+  `;
+}
+
+
+/* =========================
+   ข้อสอบ 50 ข้อ
+========================= */
+
+const questions = [
+
+{
+q:"ข้อใดเป็นเครื่องดนตรีประเภทเครื่องสาย",
+o:["ไวโอลิน","ฟลูต","ทรัมเป็ต","กลองชุด"],
+a:"ไวโอลิน",
+e:"ไวโอลินใช้สายเป็นแหล่งกำเนิดเสียง จึงจัดอยู่ในประเภทเครื่องสาย"
+},
+
+{
+q:"ข้อใดเป็นเครื่องดนตรีประเภทเครื่องเป่าลมไม้",
+o:["คลาริเน็ต","ทรอมโบน","ไวโอลิน","ฉาบ"],
+a:"คลาริเน็ต",
+e:"คลาริเน็ตเป็นเครื่องเป่าลมไม้"
+},
+
+{
+q:"ข้อใดเป็นเครื่องดนตรีประเภทเครื่องเป่าทองเหลือง",
+o:["ทรัมเป็ต","ฟลูต","กีตาร์","ไวโอลิน"],
+a:"ทรัมเป็ต",
+e:"ทรัมเป็ตเป็นเครื่องเป่าทองเหลือง"
+},
+
+{
+q:"ข้อใดเป็นเครื่องดนตรีประเภทเครื่องกระทบ",
+o:["กลอง","ฟลูต","เชลโล","ทรัมเป็ต"],
+a:"กลอง",
+e:"กลองเกิดเสียงจากการตี จึงจัดเป็นเครื่องกระทบ"
+},
+
+{
+q:"ข้อใดเป็นเครื่องดนตรีประเภทเครื่องสาย",
+o:["เชลโล","แซกโซโฟน","ทูบา","กลอง"],
+a:"เชลโล",
+e:"เชลโลมีสายเป็นแหล่งกำเนิดเสียง"
+},
+
+{
+q:"ข้อใดเป็นเครื่องเป่าลมไม้",
+o:["ฟลูต","ทรอมโบน","ฉาบ","กีตาร์"],
+a:"ฟลูต",
+e:"ฟลูตจัดอยู่ในกลุ่มเครื่องเป่าลมไม้"
+},
+
+{
+q:"ข้อใดเป็นเครื่องเป่าทองเหลือง",
+o:["ทูบา","คลาริเน็ต","ไวโอลิน","กลอง"],
+a:"ทูบา",
+e:"ทูบาเป็นเครื่องเป่าทองเหลือง"
+},
+
+{
+q:"ข้อใดเป็นเครื่องกระทบ",
+o:["ไซโลโฟน","ฟลูต","กีตาร์","ทรัมเป็ต"],
+a:"ไซโลโฟน",
+e:"ไซโลโฟนเกิดเสียงจากการตีแผ่นเสียง"
+},
+
+{
+q:"บรรทัด 5 เส้นมีเส้นทั้งหมดกี่เส้น",
+o:["5 เส้น","4 เส้น","6 เส้น","7 เส้น"],
+a:"5 เส้น",
+e:"บรรทัด 5 เส้นประกอบด้วยเส้นแนวนอน 5 เส้น"
+},
+
+{
+q:"บรรทัด 5 เส้นมีช่องว่างทั้งหมดกี่ช่อง",
+o:["4 ช่อง","5 ช่อง","3 ช่อง","6 ช่อง"],
+a:"4 ช่อง",
+e:"เส้น 5 เส้นจะเกิดช่องว่างระหว่างเส้นทั้งหมด 4 ช่อง"
+},
+
+{
+q:"กุญแจซอลใช้บอกตำแหน่งของโน้ตใดเป็นหลัก",
+o:["ซอล","ฟา","โด","ลา"],
+a:"ซอล",
+e:"กุญแจซอลกำหนดตำแหน่งเสียงซอลบนเส้นที่ 2 จากล่าง"
+},
+
+{
+q:"กุญแจฟาใช้บอกตำแหน่งของโน้ตใดเป็นหลัก",
+o:["ฟา","ซอล","โด","มี"],
+a:"ฟา",
+e:"กุญแจฟากำหนดตำแหน่งเสียงฟาบนเส้นที่ 4 จากล่าง"
+},
+
+{
+q:"เส้นที่ 2 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","line2"),
+o:["ซอล","ลา","ที","ฟา"],
+a:"ซอล",
+e:"ในกุญแจซอล เส้นที่ 2 จากล่างคือเสียงซอล"
+},
+
+{
+q:"ช่องที่ 1 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","space1"),
+o:["ฟา","ลา","โด","มี"],
+a:"ฟา",
+e:"ช่องของกุญแจซอลจากล่างขึ้นบนคือ ฟา ลา โด มี"
+},
+
+{
+q:"เส้นที่ 1 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","line1"),
+o:["มี","ซอล","ที","เร"],
+a:"มี",
+e:"เส้นกุญแจซอลจากล่างขึ้นบนคือ มี ซอล ที เร ฟา"
+},
+
+{
+q:"ช่องที่ 2 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","space2"),
+o:["ลา","ฟา","โด","มี"],
+a:"ลา",
+e:"ช่องที่ 2 จากล่างของกุญแจซอลคือ ลา"
+},
+
+{
+q:"เส้นที่ 3 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","line3"),
+o:["ที","เร","ซอล","ฟา"],
+a:"ที",
+e:"เส้นที่ 3 จากล่างของกุญแจซอลคือ ที"
+},
+
+{
+q:"ช่องที่ 3 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","space3"),
+o:["โด","ลา","มี","ฟา"],
+a:"โด",
+e:"ช่องที่ 3 จากล่างของกุญแจซอลคือ โด"
+},
+
+{
+q:"เส้นที่ 4 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","line4"),
+o:["เร","ฟา","ที","ซอล"],
+a:"เร",
+e:"เส้นที่ 4 จากล่างคือ เร"
+},
+
+{
+q:"ช่องที่ 4 จากล่างของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","space4"),
+o:["มี","โด","ลา","ฟา"],
+a:"มี",
+e:"ช่องที่ 4 จากล่างคือ มี"
+},
+
+{
+q:"เส้นที่ 5 ของกุญแจซอลคือโน้ตอะไร",
+img:staffSVG("treble","line5"),
+o:["ฟา","เร","ที","ซอล"],
+a:"ฟา",
+e:"เส้นบนสุดของกุญแจซอลคือ ฟา"
+},
+
+{
+q:"เส้นที่ 1 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","line1"),
+o:["ซอล","ลา","ที","ฟา"],
+a:"ซอล",
+e:"เส้นกุญแจฟาจากล่างขึ้นบนคือ ซอล ที เร ฟา ลา"
+},
+
+{
+q:"ช่องที่ 1 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","space1"),
+o:["ลา","โด","มี","ซอล"],
+a:"ลา",
+e:"ช่องกุญแจฟาจากล่างขึ้นบนคือ ลา โด มี ซอล"
+},
+
+{
+q:"เส้นที่ 2 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","line2"),
+o:["ที","ซอล","เร","ฟา"],
+a:"ที",
+e:"เส้นที่ 2 จากล่างคือ ที"
+},
+
+{
+q:"ช่องที่ 2 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","space2"),
+o:["โด","ลา","มี","ซอล"],
+a:"โด",
+e:"ช่องที่ 2 จากล่างคือ โด"
+},
+
+{
+q:"เส้นที่ 3 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","line3"),
+o:["เร","ฟา","ที","ลา"],
+a:"เร",
+e:"เส้นที่ 3 จากล่างคือ เร"
+},
+
+{
+q:"ช่องที่ 3 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","space3"),
+o:["มี","โด","ลา","ซอล"],
+a:"มี",
+e:"ช่องที่ 3 จากล่างคือ มี"
+},
+
+{
+q:"เส้นที่ 4 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","line4"),
+o:["ฟา","เร","ซอล","ลา"],
+a:"ฟา",
+e:"เส้นที่ 4 จากล่างคือ ฟา ซึ่งเป็นตำแหน่งสำคัญของกุญแจฟา"
+},
+
+{
+q:"ช่องที่ 4 จากล่างของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","space4"),
+o:["ซอล","ฟา","มี","โด"],
+a:"ซอล",
+e:"ช่องบนสุดของกุญแจฟาคือ ซอล"
+},
+
+{
+q:"เส้นที่ 5 ของกุญแจฟาคือโน้ตอะไร",
+img:staffSVG("bass","line5"),
+o:["ลา","ฟา","เร","ที"],
+a:"ลา",
+e:"เส้นบนสุดของกุญแจฟาคือ ลา"
+},
+
+{
+q:"ตัวโน้ตกลมมีค่ากี่จังหวะ",
+o:["4 จังหวะ","2 จังหวะ","1 จังหวะ","1/2 จังหวะ"],
+a:"4 จังหวะ",
+e:"ตัวโน้ตกลมมีค่า 4 จังหวะในพื้นฐานดนตรีสากล"
+},
+
+{
+q:"ตัวโน้ตขาวมีค่ากี่จังหวะ",
+o:["2 จังหวะ","4 จังหวะ","1 จังหวะ","1/2 จังหวะ"],
+a:"2 จังหวะ",
+e:"ตัวโน้ตขาวมีค่า 2 จังหวะ"
+},
+
+{
+q:"ตัวโน้ตดำมีค่ากี่จังหวะ",
+o:["1 จังหวะ","2 จังหวะ","4 จังหวะ","1/2 จังหวะ"],
+a:"1 จังหวะ",
+e:"ตัวโน้ตดำมีค่า 1 จังหวะ"
+},
+
+{
+q:"ตัวโน้ตเขบ็ต 1 ชั้นมีค่ากี่จังหวะ",
+o:["1/2 จังหวะ","1 จังหวะ","2 จังหวะ","4 จังหวะ"],
+a:"1/2 จังหวะ",
+e:"เขบ็ต 1 ชั้นมีค่า 1/2 จังหวะ"
+},
+
+{
+q:"ตัวหยุดมีหน้าที่อะไร",
+o:["แสดงช่วงที่เงียบ","ทำให้เสียงดังขึ้น","ทำให้โน้ตสูงขึ้น","เปลี่ยนกุญแจ"],
+a:"แสดงช่วงที่เงียบ",
+e:"ตัวหยุดใช้แทนช่วงเวลาที่ไม่มีเสียง โดยมีค่าจังหวะตามชนิดของตัวหยุด"
+},
+
+{
+q:"ตัวหยุดกลมมีค่ากี่จังหวะ",
+o:["4 จังหวะ","2 จังหวะ","1 จังหวะ","1/2 จังหวะ"],
+a:"4 จังหวะ",
+e:"ตัวหยุดกลมมีค่าเท่ากับตัวโน้ตกลม คือ 4 จังหวะ"
+},
+
+{
+q:"ตัวหยุดขาวมีค่ากี่จังหวะ",
+o:["2 จังหวะ","4 จังหวะ","1 จังหวะ","1/2 จังหวะ"],
+a:"2 จังหวะ",
+e:"ตัวหยุดขาวมีค่า 2 จังหวะ"
+},
+
+{
+q:"ตัวหยุดดำมีค่ากี่จังหวะ",
+o:["1 จังหวะ","2 จังหวะ","4 จังหวะ","1/2 จังหวะ"],
+a:"1 จังหวะ",
+e:"ตัวหยุดดำมีค่า 1 จังหวะ"
+},
+
+{
+q:"ตัวหยุดเขบ็ต 1 ชั้นมีค่ากี่จังหวะ",
+o:["1/2 จังหวะ","1 จังหวะ","2 จังหวะ","4 จังหวะ"],
+a:"1/2 จังหวะ",
+e:"ตัวหยุดเขบ็ต 1 ชั้นมีค่า 1/2 จังหวะ"
+},
+
+{
+q:"สัญลักษณ์ ♩ คืออะไร",
+o:["ตัวโน้ตดำ","ตัวโน้ตขาว","ตัวโน้ตกลม","ตัวหยุดดำ"],
+a:"ตัวโน้ตดำ",
+e:"♩ เป็นสัญลักษณ์ตัวโน้ตดำ มีค่า 1 จังหวะ"
+},
+
+{
+q:"สัญลักษณ์ 𝅗𝅥 คืออะไร",
+o:["ตัวโน้ตขาว","ตัวโน้ตดำ","ตัวโน้ตกลม","ตัวหยุดขาว"],
+a:"ตัวโน้ตขาว",
+e:"𝅗𝅥 เป็นตัวโน้ตขาว มีค่า 2 จังหวะ"
+},
+
+{
+q:"สัญลักษณ์ 𝅝 คืออะไร",
+o:["ตัวโน้ตกลม","ตัวโน้ตขาว","ตัวโน้ตดำ","ตัวหยุดกลม"],
+a:"ตัวโน้ตกลม",
+e:"𝅝 เป็นตัวโน้ตกลม มีค่า 4 จังหวะ"
+},
+
+{
+q:"สัญลักษณ์ ♪ คืออะไร",
+o:["ตัวโน้ตเขบ็ต 1 ชั้น","ตัวโน้ตดำ","ตัวโน้ตขาว","ตัวหยุดเขบ็ต"],
+a:"ตัวโน้ตเขบ็ต 1 ชั้น",
+e:"♪ เป็นตัวโน้ตเขบ็ต 1 ชั้น มีค่า 1/2 จังหวะ"
+},
+
+{
+q:"ถ้าโน้ตดำ 4 ตัวเรียงกัน จะมีค่ารวมกี่จังหวะ",
+o:["4 จังหวะ","2 จังหวะ","8 จังหวะ","1 จังหวะ"],
+a:"4 จังหวะ",
+e:"โน้ตดำแต่ละตัวมี 1 จังหวะ ดังนั้น 4 ตัวรวมเป็น 4 จังหวะ"
+},
+
+{
+q:"ถ้าโน้ตขาว 2 ตัวเรียงกัน จะมีค่ารวมกี่จังหวะ",
+o:["4 จังหวะ","2 จังหวะ","6 จังหวะ","1 จังหวะ"],
+a:"4 จังหวะ",
+e:"โน้ตขาวตัวละ 2 จังหวะ ดังนั้น 2 ตัวรวมเป็น 4 จังหวะ"
+},
+
+{
+q:"ถ้าตัวโน้ตกลม 1 ตัว และตัวโน้ตดำ 1 ตัว มีค่ารวมเท่าไร",
+o:["5 จังหวะ","4 จังหวะ","3 จังหวะ","6 จังหวะ"],
+a:"5 จังหวะ",
+e:"ตัวโน้ตกลม 4 จังหวะ + ตัวโน้ตดำ 1 จังหวะ = 5 จังหวะ"
+},
+
+{
+q:"กุญแจซอลมีลักษณะเด่นเกี่ยวข้องกับเส้นใด",
+img:staffSVG("treble"),
+o:["เส้นที่ 2 จากล่าง","เส้นที่ 1 จากล่าง","เส้นที่ 4 จากล่าง","เส้นบนสุด"],
+a:"เส้นที่ 2 จากล่าง",
+e:"กุญแจซอลกำหนดเสียงซอลไว้ที่เส้นที่ 2 จากล่าง"
+},
+
+{
+q:"กุญแจฟามีลักษณะเด่นเกี่ยวข้องกับเส้นใด",
+img:staffSVG("bass"),
+o:["เส้นที่ 4 จากล่าง","เส้นที่ 2 จากล่าง","เส้นที่ 1 จากล่าง","เส้นบนสุด"],
+a:"เส้นที่ 4 จากล่าง",
+e:"กุญแจฟากำหนดเสียงฟาไว้ที่เส้นที่ 4 จากล่าง"
+},
+
+{
+q:"ในกุญแจซอล ลำดับโน้ตบนเส้นจากล่างขึ้นบนคืออะไร",
+img:staffSVG("treble"),
+o:["มี ซอล ที เร ฟา","ซอล ที เร ฟา ลา","ลา โด มี ซอล ฟา","ฟา ลา โด มี ซอล"],
+a:"มี ซอล ที เร ฟา",
+e:"เส้นทั้ง 5 ของกุญแจซอลจากล่างขึ้นบนคือ มี ซอล ที เร ฟา"
+},
+
+{
+q:"ในกุญแจฟา ลำดับโน้ตบนเส้นจากล่างขึ้นบนคืออะไร",
+img:staffSVG("bass"),
+o:["ซอล ที เร ฟา ลา","มี ซอล ที เร ฟา","ลา โด มี ซอล","ฟา ลา โด มี ซอล"],
+a:"ซอล ที เร ฟา ลา",
+e:"เส้นทั้ง 5 ของกุญแจฟาจากล่างขึ้นบนคือ ซอล ที เร ฟา ลา"
+},
+
+{
+q:"ในกุญแจซอล ลำดับโน้ตในช่องจากล่างขึ้นบนคืออะไร",
+img:staffSVG("treble"),
+o:["ฟา ลา โด มี","ลา โด มี ซอล","มี ซอล ที เร","ซอล ที เร ฟา"],
+a:"ฟา ลา โด มี",
+e:"ช่องทั้ง 4 ของกุญแจซอลคือ ฟา ลา โด มี"
+},
+
+{
+q:"ในกุญแจฟา ลำดับโน้ตในช่องจากล่างขึ้นบนคืออะไร",
+img:staffSVG("bass"),
+o:["ลา โด มี ซอล","ฟา ลา โด มี","มี ซอล ที เร","ซอล ที เร ฟา"],
+a:"ลา โด มี ซอล",
+e:"ช่องทั้ง 4 ของกุญแจฟาคือ ลา โด มี ซอล"
+},
+
+{
+q:"ถ้าเห็นโน้ตอยู่บนเส้นที่ 2 จากล่างของกุญแจซอล โน้ตนั้นคืออะไร",
+img:staffSVG("treble","line2"),
+o:["ซอล","ฟา","ลา","ที"],
+a:"ซอล",
+e:"ตำแหน่งเส้นที่ 2 ของกุญแจซอลคือ ซอล"
+},
+
+{
+q:"ถ้าเห็นโน้ตอยู่บนช่องที่ 2 จากล่างของกุญแจฟา โน้ตนั้นคืออะไร",
+img:staffSVG("bass","space2"),
+o:["โด","ลา","มี","ซอล"],
+a:"โด",
+e:"ช่องที่ 2 ของกุญแจฟาคือ โด"
+},
+
+{
+q:"ตัวหยุดชนิดใดมีค่าเท่ากับตัวโน้ตดำ",
+o:["ตัวหยุดดำ","ตัวหยุดขาว","ตัวหยุดกลม","ตัวหยุดเขบ็ต"],
+a:"ตัวหยุดดำ",
+e:"ตัวหยุดดำมีค่า 1 จังหวะ ซึ่งเท่ากับตัวโน้ตดำ"
+}
+
+];
+
+
+/* =========================
+   สุ่มตัวเลือก
+========================= */
+
+function shuffle(array){
+  let arr=[...array];
+
+  for(let i=arr.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+
+  return arr;
+}
+
+
+/* =========================
+   แสดงข้อสอบ
+========================= */
+
+function renderQuiz(){
+
+  const quiz=document.getElementById("quiz");
+
+  quiz.innerHTML="";
+
+  questions.forEach((question,index)=>{
+
+    let shuffledOptions=shuffle(question.o);
+
+    let card=document.createElement("div");
+    card.className="card";
+
+    let html=`
+      <div class="question">
+        ข้อที่ ${index+1}. ${question.q}
+      </div>
+    `;
+
+    if(question.img){
+      html+=question.img;
+    }
+
+    html+=`<div class="options">`;
+
+    const labels=["ก","ข","ค","ง"];
+
+    shuffledOptions.forEach((option,i)=>{
+
+      html+=`
+        <label class="option">
+
+          <input
+            type="radio"
+            name="q${index}"
+            value="${escapeHTML(option)}"
+          >
+
+          <span class="label">${labels[i]}.</span>
+
+          <span>${escapeHTML(option)}</span>
+
+        </label>
+      `;
+    });
+
+    html+=`</div>`;
+
+    card.innerHTML=html;
+
+    quiz.appendChild(card);
+
+  });
+
+}
+
+
+/* ป้องกัน HTML ในตัวเลือก */
+
+function escapeHTML(text){
+
+  return text
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+   ตรวจคำตอบ
+========================= */
+
+function submitQuiz(){
+
+  let score=0;
+
+  questions.forEach((question,index)=>{
+
+    const selected=document.querySelector(
+      `input[name="q${index}"]:checked`
+    );
+
+    if(selected){
+
+      if(selected.value===question.a){
+        score++;
+      }
+
+    }
+
+  });
+
+
+  document.getElementById("result").style.display="block";
+
+  document.getElementById("score").textContent=
+    `${score} / ${questions.length} คะแนน`;
+
+  let percent=Math.round(
+    score/questions.length*100
+  );
+
+  document.getElementById("scoreText").textContent=
+    `ได้ ${percent}%`;
+
+  showExplanations();
+
+  window.scrollTo({
+    top:document.body.scrollHeight,
+    behavior:"smooth"
+  });
+
+}
+
+
+/* =========================
+   แสดงเฉลย
+========================= */
+
+function showExplanations(){
+
+  questions.forEach((question,index)=>{
+
+    const card=document.querySelectorAll(".card")[index];
+
+    const selected=document.querySelector(
+      `input[name="q${index}"]:checked`
+    );
+
+    let old=card.querySelector(".explanation");
+
+    if(old) old.remove();
+
+    let div=document.createElement("div");
+
+    div.className="explanation";
+
+    if(selected && selected.value===question.a){
+
+      div.classList.add("correct");
+
+      div.innerHTML=`
+        <strong>✅ ถูกต้อง!</strong><br>
+        คุณเลือก: ${selected.value}<br>
+        คำตอบที่ถูก: ${question.a}<br><br>
+        <strong>เหตุผล:</strong> ${question.e}
+      `;
+
+    }else{
+
+      div.classList.add("wrong");
+
+      let selectedText=
+        selected ? selected.value : "ไม่ได้เลือกคำตอบ";
+
+      div.innerHTML=`
+        <strong>❌ ยังไม่ถูก</strong><br>
+        คุณเลือก: ${selectedText}<br>
+        คำตอบที่ถูก: ${question.a}<br><br>
+        <strong>เหตุผล:</strong> ${question.e}
+      `;
+
+    }
+
+    card.appendChild(div);
+
+  });
+
+}
+
+
+/* =========================
+   ทำใหม่
+========================= */
+
+function restartQuiz(){
+
+  document.getElementById("result").style.display="none";
+
+  renderQuiz();
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+}
+
+
+/* เริ่มเกมครั้งแรก */
+
+renderQuiz();
+
+</script>
+
+</body>
+</html>
